@@ -577,6 +577,9 @@ options_t::options_t(int argc, char *argv[]) : options_t()
         case 300:
             way_node_index_id_shift = atoi(optarg);
             break;
+        case 400:
+            nogeoindex = true;
+            break;            
         case '?':
         default:
             short_usage(argv[0]);
