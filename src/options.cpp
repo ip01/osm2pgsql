@@ -560,9 +560,6 @@ options_t::options_t(int argc, char *argv[]) : options_t()
         case 213:
             reproject_area = true;
             break;
-        case 400:
-            nogeoindex = true;
-            break;            
         case 'V':
             fmt::print(stderr, "Compiled using the following library versions:\n");
             fmt::print(stderr, "Libosmium {}\n", LIBOSMIUM_VERSION_STRING);
