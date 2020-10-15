@@ -60,7 +60,7 @@ const struct option long_options[] = {
     {"merc", no_argument, nullptr, 'm'},
     {"middle-way-node-index-id-shift", required_argument, nullptr, 300},
     {"multi-geometry", no_argument, nullptr, 'G'},
-    {"nogeoindex", no_argument, nullptr, 300},
+    {"nogeoindex", no_argument, nullptr, 400},
     {"number-processes", required_argument, nullptr, 205},
     {"output", required_argument, nullptr, 'O'},
     {"password", no_argument, nullptr, 'W'},
@@ -560,9 +560,6 @@ options_t::options_t(int argc, char *argv[]) : options_t()
         case 213:
             reproject_area = true;
             break;
-        case 300:
-            nogeoindex = true;
-            break;            
         case 'V':
             fmt::print(stderr, "Compiled using the following library versions:\n");
             fmt::print(stderr, "Libosmium {}\n", LIBOSMIUM_VERSION_STRING);
