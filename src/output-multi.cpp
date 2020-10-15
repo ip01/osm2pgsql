@@ -89,7 +89,9 @@ void output_multi_t::stop(thread_pool_t *pool)
 {
     pool->submit([this]() {
         m_table->stop(m_options.slim & !m_options.droptemp,
-                      m_options.enable_hstore_index, m_options.tblsmain_index);
+                      m_options.enable_hstore_index, 
+                      m_options.nogeoindex, 
+                      m_options.tblsmain_index);
     });
     if (m_options.expire_tiles_zoom_min > 0) {
         m_expire.output_and_destroy(m_options.expire_tiles_filename.c_str(),

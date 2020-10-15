@@ -25,7 +25,8 @@ public:
             std::shared_ptr<db_copy_thread_t> const &copy_thread);
 
     void start(std::string const &conninfo, std::string const &table_space);
-    void stop(bool updateable, bool enable_hstore_index,
+    void stop(bool updateable, bool enable_hstore_index, 
+              bool nogeoindex,
               std::string const &table_space_index);
 
     void sync();
