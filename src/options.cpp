@@ -60,6 +60,7 @@ const struct option long_options[] = {
     {"merc", no_argument, nullptr, 'm'},
     {"middle-way-node-index-id-shift", required_argument, nullptr, 300},
     {"multi-geometry", no_argument, nullptr, 'G'},
+    {"nogeoindex", no_argument, nullptr, 300},
     {"number-processes", required_argument, nullptr, 205},
     {"output", required_argument, nullptr, 'O'},
     {"password", no_argument, nullptr, 'W'},
@@ -149,6 +150,7 @@ void long_usage(char const *arg0, bool verbose)
           --hstore-add-index    Add index to hstore column.\n\
     \n\
     Performance options:\n\
+          --nogeoindex  skip creation of PostGIS indexes\n\
        -i|--tablespace-index    The name of the PostgreSQL tablespace where\n\
                         all indexes will be created.\n\
                         The following options allow more fine-grained control:\n\
@@ -558,6 +560,9 @@ options_t::options_t(int argc, char *argv[]) : options_t()
         case 213:
             reproject_area = true;
             break;
+        case 300:
+            nogeoindex = true;
+            break;            
         case 'V':
             fmt::print(stderr, "Compiled using the following library versions:\n");
             fmt::print(stderr, "Libosmium {}\n", LIBOSMIUM_VERSION_STRING);

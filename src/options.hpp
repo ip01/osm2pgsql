@@ -87,6 +87,8 @@ public:
 
     bool enable_hstore_index = false; ///< add an index on the hstore column
 
+    bool nogeoindex = false; ///< skip creation of PostGIS indexes
+
     /// Output multi-geometries intead of several simple geometries
     bool enable_multi = false;
 

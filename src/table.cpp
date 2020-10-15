@@ -172,7 +172,8 @@ void table_t::generate_copy_column_list()
     }
 }
 
-void table_t::stop(bool updateable, bool enable_hstore_index,
+void table_t::stop(bool updateable, bool enable_hstore_index, 
+                   bool nogeoindex,
                    std::string const &table_space_index)
 {
     // make sure that all data is written to the DB before continuing
@@ -201,20 +202,22 @@ void table_t::stop(bool updateable, bool enable_hstore_index,
 
         auto const postgis_version = get_postgis_version(*m_sql_conn);
 
-        sql += " ORDER BY ";
-        if (postgis_version.major == 2 && postgis_version.minor < 4) {
-            fmt::print(stderr, "Using GeoHash for clustering\n");
-            if (m_srid == "4326") {
-                sql += "ST_GeoHash(way,10)";
+        if (! nogeoindex) {
+            sql += " ORDER BY ";
+            if (postgis_version.major == 2 && postgis_version.minor < 4) {
+                fmt::print(stderr, "Using GeoHash for clustering\n");
+                if (m_srid == "4326") {
+                    sql += "ST_GeoHash(way,10)";
+                } else {
+                    sql += "ST_GeoHash(ST_Transform(ST_Envelope(way),4326),10)";
+                }
+                sql += " COLLATE \"C\"";
             } else {
-                sql += "ST_GeoHash(ST_Transform(ST_Envelope(way),4326),10)";
+                fmt::print(stderr, "Using native order for clustering\n");
+                // Since Postgis 2.4 the order function for geometries gives
+                // useful results.
+                sql += "way";
             }
-            sql += " COLLATE \"C\"";
-        } else {
-            fmt::print(stderr, "Using native order for clustering\n");
-            // Since Postgis 2.4 the order function for geometries gives
-            // useful results.
-            sql += "way";
         }
 
         m_sql_conn->exec(sql);
@@ -224,22 +227,25 @@ void table_t::stop(bool updateable, bool enable_hstore_index,
             "ALTER TABLE {0}_tmp RENAME TO {0}"_format(m_target->name));
         fmt::print(stderr, "Copying {} to cluster by geometry finished\n",
                    m_target->name);
-        fmt::print(stderr, "Creating geometry index on {}\n", m_target->name);
 
-        // Use fillfactor 100 for un-updatable imports
-        m_sql_conn->exec("CREATE INDEX ON {} USING GIST (way) {} {}"_format(
-            m_target->name, (updateable ? "" : "WITH (fillfactor = 100)"),
-            tablespace_clause(table_space_index)));
+        if (! nogeoindex) {           
+            fmt::print(stderr, "Creating geometry index on {}\n", m_target->name);
 
-        /* slim mode needs this to be able to apply diffs */
-        if (updateable) {
-            fmt::print(stderr, "Creating osm_id index on {}\n", m_target->name);
-            m_sql_conn->exec(
-                "CREATE INDEX ON {} USING BTREE (osm_id) {}"_format(
-                    m_target->name, tablespace_clause(table_space_index)));
-            if (m_srid != "4326") {
-                create_geom_check_trigger(m_sql_conn.get(), "", m_target->name,
-                                          "way");
+            // Use fillfactor 100 for un-updatable imports
+            m_sql_conn->exec("CREATE INDEX ON {} USING GIST (way) {} {}"_format(
+                m_target->name, (updateable ? "" : "WITH (fillfactor = 100)"),
+                tablespace_clause(table_space_index)));
+
+            /* slim mode needs this to be able to apply diffs */
+            if (updateable) {
+                fmt::print(stderr, "Creating osm_id index on {}\n", m_target->name);
+                m_sql_conn->exec(
+                    "CREATE INDEX ON {} USING BTREE (osm_id) {}"_format(
+                        m_target->name, tablespace_clause(table_space_index)));
+                if (m_srid != "4326") {
+                    create_geom_check_trigger(m_sql_conn.get(), "", m_target->name,
+                                            "way");
+                }
             }
         }
         /* Create hstore index if selected */
